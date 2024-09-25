@@ -5,9 +5,13 @@
 @author: Alandis, Elijah, Jessica, Kristhen, James
 
 """
+from colorsys import ONE_SIXTH
 
 from flask import Flask, request, render_template, redirect, session, jsonify
 import sqlite3
+
+from jinja2.utils import Joiner
+
 from flask_session import Session
 import webbrowser
 import threading
@@ -149,12 +153,29 @@ def check_login():
 
     conn = connect_db()
     cursor = conn.cursor()
-
-    # Query to check if the provided username and password match
-    query = "SELECT * FROM LogInfo WHERE UserNm = ? AND PsWrd = ?"
+    """
+    logging.warning(f"Username: {username}")
+    query = "SELECT First_Name FROM CustomerInfo Inner Join LogInfo on CustomerInfo.Email_Add = LogInfo.UserEmail WHERE  LogInfo.UserNm = ? AND LogInfo.PsWrd = ?"
     cursor.execute(query, (username, password))
     user = cursor.fetchone()
     conn.close()
+    username = session ['username']
+    auth_level = session
+    
+    logging.warning(f"Username: {user[0]}")
+    if user:
+
+        return f'Welcome {user[0]}'
+
+    else :
+        return 'Welcome UserNm'
+
+    """
+    #Query to check if the provided username and password match
+    query = "SELECT * FROM LogInfo WHERE UserNm = ? AND PsWrd = ?"
+    cursor.execute(query, (username, password))
+    user = cursor.fetchone()
+   # conn.close()
 
     logging.debug(f"User fetched from database: {user}")
 
@@ -162,7 +183,25 @@ def check_login():
         session['username'] = username
         session['auth_level'] = user[4]
         logging.warning(f"Username: {user[0]}, Auth Level: {user[4]}")
-        return render_template('success.html', username=username)
+        logging.warning(f"Username: {username}")
+        if session.get('auth_level') == 'Customer':
+            query = "SELECT First_Name FROM CustomerInfo Inner Join LogInfo on CustomerInfo.Email_Add = LogInfo.UserEmail WHERE  LogInfo.UserNm = ? AND LogInfo.PsWrd = ?"
+            cursor.execute(query, (username, password))
+            user = cursor.fetchone()
+            logging.warning(f"Username: {user[0]}")
+
+
+        conn.close()
+        if session.get('auth_level') == 'Customer':
+            logging.warning(f"Username test 4: {user[0]}")
+            session['firstname'] = user[0]
+            firstname = user[0]
+            return render_template('success.html', username=username,firstname=firstname)
+        else:
+            return render_template('success.html', username=username)
+
+
+
     else:
         return render_template('error.html', message="Invalid username or password")
 
@@ -386,9 +425,9 @@ if __name__ == '__main__':
     chrome_path = 'C:/Program Files/Google/Chrome/Application/chrome.exe %s'
 
     # Open the local webpage in Chrome
+
+
     webbrowser.get(chrome_path).open_new_tab('http://127.0.0.1:5000/login')
-
-
 
 
 
